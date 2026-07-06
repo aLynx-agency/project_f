@@ -1,0 +1,106 @@
+# ArgoCD Applications for project-f.
+# Apply once with: kubectl apply -f deploy/argocd/applications.yaml
+#
+# Sync policies:
+#   staging     - fully automated (prune + selfHeal). Every push to main auto-deploys.
+#   production  - manual sync. CI commits the tag bump, you click "Sync" in ArgoCD UI to promote.
+#   postgres    - manual sync. Never auto-mutate DB clusters.
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: project-f-staging
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/alynx-agency/project-f
+    path: deploy/k8s/overlays/staging/app
+    targetRevision: main
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: project-f-staging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: project-f-production
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/alynx-agency/project-f
+    path: deploy/k8s/overlays/production/app
+    targetRevision: main
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: project-f-production
+  # No `automated:` block — production sync requires explicit approval in the UI.
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: project-f-staging-postgres
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/alynx-agency/project-f
+    path: deploy/k8s/overlays/staging/postgres
+    targetRevision: main
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: project-f-staging
+  # Manual sync for DB — you deliberately approve schema/config changes.
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: project-f-production-postgres
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/alynx-agency/project-f
+    path: deploy/k8s/overlays/production/postgres
+    targetRevision: main
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: project-f-production
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=false
+      - ServerSideApply=true

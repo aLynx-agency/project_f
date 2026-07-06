@@ -1,0 +1,38 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: project-f-production
+
+resources:
+  - ../../../base/app
+
+# newTag is updated by CI (docker.yml) when a v*.*.* tag is pushed.
+images:
+  - name: ghcr.io/alynx-agency/project-f
+    newName: ghcr.io/alynx-agency/project-f
+    newTag: latest # bumped to v1.2.3 on release
+
+patches:
+  - target:
+      kind: Deployment
+      name: project-f
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: 250m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: 512Mi
+  - target:
+      kind: Ingress
+      name: project-f
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: hub.alynx.agency
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: hub.alynx.agency

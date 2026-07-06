@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: project-f
+  labels:
+    app.kubernetes.io/name: project-f
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: project-f
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: project-f
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: app
+          image: ghcr.io/alynx-agency/project-f:latest # tag overwritten by overlay
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "3000"
+            - name: HOSTNAME
+              value: "0.0.0.0"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: project-f-secrets
+                  key: DATABASE_URL
+            - name: SENTRY_ORG
+              valueFrom:
+                secretKeyRef:
+                  name: project-f-secrets
+                  key: SENTRY_ORG
+                  optional: true
+            - name: SENTRY_PROJECT
+              valueFrom:
+                secretKeyRef:
+                  name: project-f-secrets
+                  key: SENTRY_PROJECT
+                  optional: true
+            - name: SENTRY_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: project-f-secrets
+                  key: SENTRY_AUTH_TOKEN
+                  optional: true
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false # next writes cache
+            capabilities:
+              drop: [ALL]
+      # imagePullSecrets: only needed if the GHCR package is private.
+      # For a public package (default when repo is public, or when you toggle it in GHCR settings),
+      # delete this block. For private, create the secret with:
+      #   kubectl -n <namespace> create secret docker-registry ghcr-pull \
+      #     --docker-server=ghcr.io --docker-username=<gh-user> --docker-password=<PAT-with-read:packages>
+      imagePullSecrets:
+        - name: ghcr-pull

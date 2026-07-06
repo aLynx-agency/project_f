@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: project-f-production
+
+resources:
+  - ../../../base/postgres
+
+patches:
+  - target:
+      kind: Cluster
+      name: postgres
+    patch: |-
+      - op: replace
+        path: /spec/instances
+        value: 3
+      - op: replace
+        path: /spec/storage/size
+        value: 100Gi

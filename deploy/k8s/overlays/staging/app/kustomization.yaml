@@ -1,0 +1,32 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: project-f-staging
+
+resources:
+  - ../../../base/app
+
+# newTag is updated by CI (docker.yml) on every push to main.
+images:
+  - name: ghcr.io/alynx-agency/project-f
+    newName: ghcr.io/alynx-agency/project-f
+    newTag: staging
+
+patches:
+  - target:
+      kind: Deployment
+      name: project-f
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+  - target:
+      kind: Ingress
+      name: project-f
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: staging.hub.alynx.agency
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: staging.hub.alynx.agency

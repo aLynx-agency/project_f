@@ -1,0 +1,51 @@
+# Build artifacts
+.next
+node_modules
+dist
+build
+coverage
+
+# VCS + editor
+.git
+.gitignore
+.github
+.husky
+.vscode
+.idea
+.editorconfig
+
+# Environments (real secrets injected at build/runtime as ARGs or k8s Secrets)
+.env
+.env.*
+!.env.example
+
+# Docs (not needed to build the app)
+README.md
+CONTRIBUTING.md
+CLAUDE.md
+AGENTS.md
+setup.md
+docs
+
+# Deployment manifests (not needed inside the app image)
+deploy
+
+# Dev-only scripts / tests
+scripts
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+vitest.config.mts
+vitest.setup.ts
+
+# Misc
+*.log
+Dockerfile
+.dockerignore
+.prettierignore
+.prettierrc
+eslint.config.mjs
+commitlint.config.mjs
+lint-staged.config.mjs
+renovate.json

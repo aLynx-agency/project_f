@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: project-f
+  annotations:
+    # cert-manager watches this annotation and provisions a Let's Encrypt cert automatically.
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    # Only serve on 443 (TLS). Traefik still needs port 80 open for cert-manager's HTTP-01 challenge,
+    # which lives on a separate ingress that cert-manager creates temporarily during issuance.
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: replace-me.example.com # overwritten by overlay
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: project-f
+                port:
+                  name: http
+  tls:
+    - hosts:
+        - replace-me.example.com # overwritten by overlay
+      secretName: project-f-tls
