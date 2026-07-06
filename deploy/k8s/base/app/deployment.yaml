@@ -92,10 +92,3 @@ spec:
             readOnlyRootFilesystem: false # next writes cache
             capabilities:
               drop: [ALL]
-      # imagePullSecrets: only needed if the GHCR package is private.
-      # For a public package (default when repo is public, or when you toggle it in GHCR settings),
-      # delete this block. For private, create the secret with:
-      #   kubectl -n <namespace> create secret docker-registry ghcr-pull \
-      #     --docker-server=ghcr.io --docker-username=<gh-user> --docker-password=<PAT-with-read:packages>
-      imagePullSecrets:
-        - name: ghcr-pull
