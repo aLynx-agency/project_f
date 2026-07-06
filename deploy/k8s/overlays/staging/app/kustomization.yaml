@@ -7,7 +7,7 @@ resources:
 images:
   - name: ghcr.io/alynx-agency/project_f
     newName: ghcr.io/alynx-agency/project_f
-    newTag: staging-cee60ac
+    newTag: staging-cdeb02a
 patches:
   - target:
       kind: Deployment
