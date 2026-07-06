@@ -3,8 +3,8 @@
 k3s + CNPG + cert-manager + ArgoCD deployment of project-f.
 
 - **Node public IP:** `158.101.3.6`
-- **Staging URL:** `https://staging.hub.alynx.agency`
-- **Production URL:** `https://hub.alynx.agency`
+- **Staging URL:** `https://staging.hub.tryalynx.com`
+- **Production URL:** `https://hub.tryalynx.com`
 - **GHCR image:** `ghcr.io/alynx-agency/project_f`
 
 Change `aLynx-agency` throughout the repo if you're using a different GitHub org:
@@ -19,7 +19,7 @@ grep -RIl "alynx-agency/project_f" | xargs sed -i 's#alynx-agency/project_f#your
 
 ### 1. DNS at Squarespace
 
-alynx.agency → DNS Settings → Custom Records:
+tryalynx.com → DNS Settings → Custom Records:
 
 ```
 hub               A   158.101.3.6
@@ -30,7 +30,7 @@ argo              A   158.101.3.6   (optional, if you want ArgoCD UI on a public
 Wait for propagation then verify:
 
 ```bash
-dig +short hub.alynx.agency staging.hub.alynx.agency
+dig +short hub.tryalynx.com staging.hub.tryalynx.com
 # both should return 158.101.3.6
 ```
 
@@ -164,7 +164,7 @@ git push origin main
    ↓ Docker CI commits kustomization.yaml bump to main  [skip ci]
    ↓ ArgoCD sees the commit within ~3 min
    ↓ Syncs to project-f-staging namespace
-   ↓ cert-manager issues/reuses cert for staging.hub.alynx.agency
+   ↓ cert-manager issues/reuses cert for staging.hub.tryalynx.com
 ```
 
 **Production (manual promotion):**
@@ -201,9 +201,9 @@ kubectl -n project-f-staging set image deploy/project-f app=ghcr.io/alynx-agency
 ## Verifying it's live
 
 ```bash
-curl -sS https://staging.hub.alynx.agency/api/health
+curl -sS https://staging.hub.tryalynx.com/api/health
 # → {"status":"ok"}
-curl -sS https://hub.alynx.agency/api/health
+curl -sS https://hub.tryalynx.com/api/health
 # → {"status":"ok"}
 ```
 
@@ -212,7 +212,7 @@ Both should return HTTP 200 with a valid Let's Encrypt cert (green padlock in br
 ## Later hardening
 
 - HTTP→HTTPS redirect via a Traefik `Middleware` (right now HTTP requests return 404)
-- Expose ArgoCD UI at `argo.alynx.agency` with SSO (Google or GitHub) instead of port-forward
+- Expose ArgoCD UI at `argo.tryalynx.com` with SSO (Google or GitHub) instead of port-forward
 - CNPG backups to S3/B2 for point-in-time recovery
 - HorizontalPodAutoscaler once real traffic arrives
 - Prometheus + Grafana or Sentry Performance for observability

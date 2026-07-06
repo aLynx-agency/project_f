@@ -22,7 +22,7 @@ patches:
     patch: |-
       - op: replace
         path: /spec/rules/0/host
-        value: staging.hub.alynx.agency
+        value: staging.hub.tryalynx.com
       - op: replace
         path: /spec/tls/0/hosts/0
-        value: staging.hub.alynx.agency
+        value: staging.hub.tryalynx.com
