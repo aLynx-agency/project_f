@@ -5,12 +5,12 @@ k3s + CNPG + cert-manager + ArgoCD deployment of project-f.
 - **Node public IP:** `158.101.3.6`
 - **Staging URL:** `https://staging.hub.alynx.agency`
 - **Production URL:** `https://hub.alynx.agency`
-- **GHCR image:** `ghcr.io/alynx-agency/project-f`
+- **GHCR image:** `ghcr.io/alynx-agency/project_f`
 
-Change `alynx-agency` throughout the repo if you're using a different GitHub org:
+Change `aLynx-agency` throughout the repo if you're using a different GitHub org:
 
 ```bash
-grep -RIl "alynx-agency/project-f" | xargs sed -i 's#alynx-agency/project-f#your-org/project-f#g'
+grep -RIl "alynx-agency/project_f" | xargs sed -i 's#alynx-agency/project_f#your-org/project_f#g'
 ```
 
 ---
@@ -61,7 +61,7 @@ kubectl create namespace project-f-staging
 kubectl create namespace project-f-production
 
 # ClusterIssuer (Let's Encrypt account, harsh@alynx.agency)
-kubectl apply -f https://raw.githubusercontent.com/alynx-agency/project-f/main/deploy/k8s/base/cluster-issuer.yaml
+kubectl apply -f https://raw.githubusercontent.com/aLynx-agency/project_f/main/deploy/k8s/base/cluster-issuer.yaml
 # ...or apply from the local clone:
 #   kubectl apply -f deploy/k8s/base/cluster-issuer.yaml
 ```
@@ -195,7 +195,7 @@ kubectl -n project-f-staging logs -f deploy/project-f
 kubectl -n project-f-staging exec -it postgres-1 -- psql -U project_f
 
 # Rollback via ArgoCD UI: pick the previous revision → Sync. Or force one image tag:
-kubectl -n project-f-staging set image deploy/project-f app=ghcr.io/alynx-agency/project-f:staging-<older-sha>
+kubectl -n project-f-staging set image deploy/project-f app=ghcr.io/alynx-agency/project_f:staging-<older-sha>
 ```
 
 ## Verifying it's live

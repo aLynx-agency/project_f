@@ -28,7 +28,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: app
-          image: ghcr.io/alynx-agency/project-f:latest # tag overwritten by overlay
+          image: ghcr.io/alynx-agency/project_f:latest # tag overwritten by overlay
           imagePullPolicy: IfNotPresent
           ports:
             - name: http

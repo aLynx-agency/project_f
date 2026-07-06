@@ -17,7 +17,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/alynx-agency/project-f
+    repoURL: https://github.com/aLynx-agency/project_f
     path: deploy/k8s/overlays/staging/app
     targetRevision: main
   destination:
@@ -48,7 +48,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/alynx-agency/project-f
+    repoURL: https://github.com/aLynx-agency/project_f
     path: deploy/k8s/overlays/production/app
     targetRevision: main
   destination:
@@ -71,7 +71,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/alynx-agency/project-f
+    repoURL: https://github.com/aLynx-agency/project_f
     path: deploy/k8s/overlays/staging/postgres
     targetRevision: main
   destination:
@@ -94,7 +94,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/alynx-agency/project-f
+    repoURL: https://github.com/aLynx-agency/project_f
     path: deploy/k8s/overlays/production/postgres
     targetRevision: main
   destination:

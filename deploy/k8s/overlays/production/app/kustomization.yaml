@@ -8,8 +8,8 @@ resources:
 
 # newTag is updated by CI (docker.yml) when a v*.*.* tag is pushed.
 images:
-  - name: ghcr.io/alynx-agency/project-f
-    newName: ghcr.io/alynx-agency/project-f
+  - name: ghcr.io/alynx-agency/project_f
+    newName: ghcr.io/alynx-agency/project_f
     newTag: latest # bumped to v1.2.3 on release
 
 patches:

@@ -8,8 +8,8 @@ resources:
 
 # newTag is updated by CI (docker.yml) on every push to main.
 images:
-  - name: ghcr.io/alynx-agency/project-f
-    newName: ghcr.io/alynx-agency/project-f
+  - name: ghcr.io/alynx-agency/project_f
+    newName: ghcr.io/alynx-agency/project_f
     newTag: staging
 
 patches:
