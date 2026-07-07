@@ -17,7 +17,8 @@ export default withSentryConfig(nextConfig, {
   authToken: process.env.SENTRY_AUTH_TOKEN,
   silent: !process.env.CI,
   widenClientFileUpload: true,
-  tunnelRoute: "/monitoring",
+  // tunnelRoute is intentionally omitted: @sentry/nextjs 10 + Next 16 (Turbopack) does not
+  // auto-generate the route, so client beacons 404. Direct-to-sentry.io is fine for internal use.
   // NOTE: disableLogger + automaticVercelMonitors are webpack-only in @sentry/nextjs 10+.
   // Next 16 uses Turbopack by default, so those options are no-ops. Omit them to silence
   // the deprecation warnings. When/if a webpack build is added, they'd move under
