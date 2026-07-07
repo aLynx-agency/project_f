@@ -31,7 +31,7 @@ docs
 deploy
 
 # Dev-only scripts / tests
-scripts
+scripts/db-smoke.ts
 **/*.test.ts
 **/*.test.tsx
 **/*.spec.ts
