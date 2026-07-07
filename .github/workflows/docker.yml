@@ -159,10 +159,11 @@ jobs:
         run: |
           # The tag lives at a commit on main. We need to commit the overlay bump to main, not the tag.
           VERSION="${GITHUB_REF#refs/tags/}"
+          IMAGE_TAG="${VERSION#v}"
           git fetch origin main
           git checkout main
           git pull origin main --ff-only
-          yq eval ".images[0].newTag = \"${VERSION}\"" \
+          yq eval ".images[0].newTag = \"${IMAGE_TAG}\"" \
             -i deploy/k8s/overlays/production/app/kustomization.yaml
           echo "--- updated overlay ---"
           cat deploy/k8s/overlays/production/app/kustomization.yaml

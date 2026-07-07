@@ -7,7 +7,7 @@ resources:
 images:
   - name: ghcr.io/alynx-agency/project_f
     newName: ghcr.io/alynx-agency/project_f
-    newTag: v0.1.0 # bumped to v1.2.3 on release
+    newTag: 0.1.0
 patches:
   - target:
       kind: Deployment
