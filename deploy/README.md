@@ -111,11 +111,21 @@ kubectl -n project-f-production create secret generic project-f-secrets \
   --from-literal=DATABASE_URL="postgres://project_f:${PROD_PASS}@postgres-rw:5432/project_f?sslmode=require"
 ```
 
-Add optional Sentry keys later:
+**Sentry credentials — two places, two purposes:**
+
+| Where                                    | What                                                                            | Why                                                                                                                    |
+| ---------------------------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| GitHub Actions → **Variables**           | `NEXT_PUBLIC_SENTRY_DSN`, `NEXT_PUBLIC_APP_URL`, `SENTRY_ORG`, `SENTRY_PROJECT` | `NEXT_PUBLIC_*` is baked into the client bundle at `docker build` time; Sentry org/project label the source-map upload |
+| GitHub Actions → **Secrets**             | `SENTRY_AUTH_TOKEN`                                                             | Used at build time to upload source maps to Sentry                                                                     |
+| k8s `project-f-secrets` (patch as below) | `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` (optional)                  | Runtime access from server-side code, if ever needed                                                                   |
+
+Client-side events flow **directly to sentry.io** (no tunnel route — Turbopack in Next 16 doesn't auto-generate one). Browser ad blockers may drop them; most users don't run aggressive blockers, and server-side errors are unaffected.
+
+Optional k8s runtime patch (only if server code needs these at runtime):
 
 ```bash
 kubectl -n project-f-staging patch secret project-f-secrets \
-  --patch='{"stringData":{"SENTRY_ORG":"alynx","SENTRY_PROJECT":"project-f","SENTRY_AUTH_TOKEN":"..."}}'
+  --patch='{"stringData":{"SENTRY_ORG":"alynx-e6","SENTRY_PROJECT":"project_f","SENTRY_AUTH_TOKEN":"..."}}'
 ```
 
 ### 6. GHCR image visibility
@@ -166,9 +176,9 @@ In the ArgoCD UI you'll now see 4 Applications:
 
 ```
 git push origin main
-   ↓ Quality CI runs
-   ↓ Docker CI builds ghcr.io/.../project-f:staging-<sha>
-   ↓ Docker CI commits kustomization.yaml bump to main  [skip ci]
+   ↓ CI: quality job runs (lint + typecheck + tests + build)
+   ↓ CI: build-staging fires ONLY if quality passed → ghcr.io/.../project-f:staging-<sha>
+   ↓ CI commits kustomization.yaml bump to main  [skip ci]
    ↓ ArgoCD sees the commit within ~3 min
    ↓ Syncs to project-f-staging namespace
    ↓ cert-manager issues/reuses cert for staging.hub.tryalynx.com
@@ -179,9 +189,10 @@ git push origin main
 ```
 git tag -a v0.1.0 -m "First release"
 git push origin v0.1.0
-   ↓ Docker CI builds ghcr.io/.../project-f:v0.1.0 (+ :latest)
-   ↓ Docker CI commits kustomization.yaml bump to main  [skip ci]
-   ↓ You open ArgoCD UI, review the diff, click Sync on project-f-production
+   ↓ CI: build-production runs (no quality gate — tag is only cut from already-verified main code)
+   ↓ Image published as ghcr.io/.../project-f:0.1.0 (+ :0.1, :latest)
+   ↓ CI commits kustomization.yaml bump to main  [skip ci]
+   ↓ Open https://cd.tryalynx.com, review the diff, click Sync on project-f-production
    ↓ Cluster updates
 ```
 

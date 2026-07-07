@@ -230,7 +230,7 @@ After the first push to GitHub:
    - ✅ Dismiss stale pull request approvals when new commits are pushed
    - ✅ Require review from Code Owners (once `CODEOWNERS` exists)
    - ✅ Require status checks to pass before merging
-     - Required checks (added after first CI run): `quality`, `PR Title / Validate Conventional Commit format`
+     - Required checks (added after first CI run): `CI / Lint + Format + Typecheck + Tests + Build`, `PR Title / Validate Conventional Commit format`
    - ✅ Require branches to be up to date before merging
    - ✅ Require conversation resolution before merging
    - ✅ Block force pushes
@@ -248,9 +248,19 @@ After the first push to GitHub:
 
 ## Sentry setup
 
-The instrumentation is wired but inactive until you set `NEXT_PUBLIC_SENTRY_DSN`. To enable:
+The instrumentation is already wired: `instrumentation.ts` (server/edge), `instrumentation-client.ts` (browser), and `withSentryConfig` in `next.config.ts`.
 
-1. Create a Sentry project (Next.js platform)
-2. Copy the DSN into `.env.local` (and your hosting env)
-3. For source-map upload, also set `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN`
-4. Or run the wizard for full guided setup: `bunx @sentry/wizard@latest -i nextjs`
+**Do not run `@sentry/wizard`** — it would overwrite these files. Everything the wizard creates is already in place.
+
+To activate for local dev, add to `.env.local`:
+
+```
+NEXT_PUBLIC_SENTRY_DSN=https://...ingest.de.sentry.io/...
+```
+
+For CI/deployed builds, the DSN lives in **GitHub Actions Variables** (not secrets), because `NEXT_PUBLIC_*` values are baked into the client bundle at `docker build` time — you cannot inject them at runtime. See `deploy/README.md` for the full env-var matrix.
+
+Notes:
+
+- **Client events go directly to `sentry.io`.** The `tunnelRoute` option is intentionally omitted because `@sentry/nextjs` v10 + Turbopack does not auto-generate the route (client beacons would 404). Browser ad blockers may drop events as a result — an acceptable tradeoff for now.
+- **Never use `env.NODE_ENV` in client-side code.** `NODE_ENV` is declared in the `server` section of `src/env.ts`; accessing it via `env.*` on the client throws at runtime. Use `process.env.NODE_ENV` directly — Next.js makes it available everywhere.
