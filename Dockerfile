@@ -36,6 +36,10 @@ ENV SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN
 
 RUN bun --bun next build
 
+# Bundle the migration runner into a single Node-compatible JS file.
+# drizzle-orm and postgres are pure JS so they bundle cleanly; SQL files are copied separately.
+RUN bun build scripts/migrate.ts --outfile .migrate.js --target node
+
 # ---------- Stage 3: minimal Node runtime ----------
 FROM node:22-slim AS runner
 WORKDIR /app
@@ -57,6 +61,8 @@ RUN apt-get update \
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.migrate.js ./migrate.js
+COPY --from=builder --chown=nextjs:nodejs /app/src/db/migrations ./migrations
 
 USER nextjs
 EXPOSE 3000
