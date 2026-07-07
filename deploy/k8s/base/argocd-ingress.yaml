@@ -1,0 +1,45 @@
+# Exposes the ArgoCD UI at https://cd.tryalynx.com behind Traefik + Let's Encrypt.
+# Apply once (cluster-level, not per-env):
+#   kubectl apply -f deploy/k8s/base/argocd-ingress.yaml
+#   kubectl -n argocd rollout restart deploy/argocd-server
+---
+# ArgoCD's argocd-server pod serves both HTTP (8080) and HTTPS (8443) by default.
+# When behind a TLS-terminating proxy like Traefik, it needs `server.insecure: true`
+# so it stops trying to redirect HTTP→HTTPS internally (which causes a redirect loop).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cmd-params-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-cmd-params-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  server.insecure: "true"
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-server
+  namespace: argocd
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: cd.tryalynx.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: argocd-server
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - cd.tryalynx.com
+      secretName: argocd-server-tls

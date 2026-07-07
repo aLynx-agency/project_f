@@ -24,7 +24,7 @@ tryalynx.com → DNS Settings → Custom Records:
 ```
 hub               A   158.101.3.6
 staging.hub       A   158.101.3.6
-argo              A   158.101.3.6   (optional, if you want ArgoCD UI on a public host later)
+cd                A   158.101.3.6   (ArgoCD UI at cd.tryalynx.com)
 ```
 
 Wait for propagation then verify:
@@ -69,6 +69,10 @@ kubectl apply -f https://raw.githubusercontent.com/aLynx-agency/project_f/main/d
 kubectl apply -f https://raw.githubusercontent.com/aLynx-agency/project_f/main/deploy/k8s/base/traefik-config.yaml
 # ...or apply from the local clone:
 #   kubectl apply -f deploy/k8s/base/traefik-config.yaml
+
+# ArgoCD UI at cd.tryalynx.com (apply after ArgoCD install above)
+kubectl apply -f deploy/k8s/base/argocd-ingress.yaml
+kubectl -n argocd rollout restart deploy/argocd-server
 ```
 
 ### 4. Postgres bootstrap (per environment)
@@ -132,13 +136,11 @@ kubectl -n project-f-staging create secret docker-registry ghcr-pull \
 ### 7. Wire up ArgoCD
 
 ```bash
-# Get initial admin password
+# Get initial admin password (rotate via Account → Update Password after first login)
 kubectl -n argocd get secret argocd-initial-admin-secret \
   -o jsonpath="{.data.password}" | base64 -d && echo
 
-# Port-forward the UI (leave running in a terminal)
-kubectl -n argocd port-forward svc/argocd-server 8080:80
-# → open http://localhost:8080, login as admin
+# → open https://cd.tryalynx.com, login as admin
 
 # If the repo is private, add repo credentials in the UI:
 # Settings → Repositories → Connect repo → HTTPS → paste GitHub PAT with repo read scope.
@@ -216,7 +218,7 @@ Both should return HTTP 200 with a valid Let's Encrypt cert (green padlock in br
 
 ## Later hardening
 
-- Expose ArgoCD UI at `argo.tryalynx.com` with SSO (Google or GitHub) instead of port-forward
+- Add SSO to ArgoCD UI (Google or GitHub) instead of the built-in admin account
 - CNPG backups to S3/B2 for point-in-time recovery
 - HorizontalPodAutoscaler once real traffic arrives
 - Prometheus + Grafana or Sentry Performance for observability
