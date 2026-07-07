@@ -36,7 +36,7 @@ bun run db:smoke         # insert + read a row to verify connectivity
 - Every schema change → `db:generate` → review the SQL → commit migration file with the schema change in the same PR
 - Never edit a migration file after it has been applied to a shared DB — write a new forward migration instead
 - `db:push` is for solo prototyping only; on shared/prod DBs always use generated migrations
-- `db:migrate` is **never** auto-run on deploy — run it as a manual step with an approval gate
+- `db:migrate` runs automatically on every deploy as an ArgoCD PreSync Job — a failed migration blocks the deploy and leaves the running app untouched
 
 **Where DB code lives:**
 
@@ -82,8 +82,10 @@ bun run db:generate
 
 # 4. Review src/db/migrations/<new>.sql — make sure the SQL matches your intent
 
-# 5. Apply it (locally + commit the migration file in the same PR as the schema change)
+# 5. Apply it locally, then commit the migration file in the same PR as the schema change
 bun run db:migrate
+# On the cluster, migrations run automatically before each deploy via an ArgoCD PreSync Job
+# (scripts/migrate.ts bundled into the app image). No manual step needed on deploy.
 ```
 
 ```ts

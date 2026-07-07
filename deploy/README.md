@@ -257,9 +257,13 @@ git push origin v0.1.0
 # Force a fresh deploy without a new commit (staging)
 kubectl -n project-f-staging rollout restart deploy/project-f
 
-# Run migrations from your laptop (port-forward the DB first)
+# Migrations run automatically as an ArgoCD PreSync Job before each deploy.
+# To run manually (e.g. hotfix outside a deploy):
 kubectl -n project-f-staging port-forward svc/postgres-rw 5432:5432 &
 DATABASE_URL="postgres://project_f:${STAGING_PASS}@localhost:5432/project_f?sslmode=require" bun run db:migrate
+
+# Check the last migration job's logs
+kubectl -n project-f-staging logs job/db-migrate
 
 # Tail app logs
 kubectl -n project-f-staging logs -f deploy/project-f
