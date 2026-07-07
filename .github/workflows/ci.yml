@@ -1,6 +1,8 @@
-name: Docker
+name: CI
 
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
     tags: ["v*.*.*"]
@@ -9,17 +11,63 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
-# Never cancel a build in progress — each push/tag gets its own image + deploy commit.
-concurrency:
-  group: docker-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
+  quality:
+    name: Lint + Format + Typecheck + Tests + Build
+    if: |
+      !startsWith(github.ref, 'refs/tags/')
+      && !contains(github.event.head_commit.message, '[skip ci]')
+    concurrency:
+      group: quality-${{ github.ref }}
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      # next build reads env at build time. Provide safe placeholders so the
+      # build succeeds without needing the real staging/prod secrets in PR CI.
+      # Real values are injected in docker build-args at image-build time.
+      SKIP_ENV_VALIDATION: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: package.json
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Restore Next.js build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('bun.lock') }}-${{ hashFiles('src/**/*.{ts,tsx,js,jsx}') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('bun.lock') }}-
+
+      - name: Check (lint + format + typecheck + tests)
+        run: bun run check
+
+      - name: Build
+        run: bun run build
+
   # Push to main → build STAGING image and bump overlay tag.
+  # Gated on quality so a broken commit never produces a deployed image.
   build-staging:
+    name: Build & push staging image
     if: |
       github.ref == 'refs/heads/main'
       && !contains(github.event.head_commit.message, '[skip ci]')
+    needs: quality
+    concurrency:
+      group: docker-${{ github.ref }}
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     permissions:
       contents: write # commit the tag bump back to main
@@ -98,8 +146,13 @@ jobs:
           git push origin HEAD:main
 
   # Git tag v*.*.* → build PRODUCTION image and bump overlay tag.
+  # No quality dependency: tags are only cut from code that already passed CI on main.
   build-production:
+    name: Build & push production image
     if: startsWith(github.ref, 'refs/tags/v')
+    concurrency:
+      group: docker-${{ github.ref }}
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     permissions:
       contents: write
