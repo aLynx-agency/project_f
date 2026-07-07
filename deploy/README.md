@@ -64,6 +64,11 @@ kubectl create namespace project-f-production
 kubectl apply -f https://raw.githubusercontent.com/aLynx-agency/project_f/main/deploy/k8s/base/cluster-issuer.yaml
 # ...or apply from the local clone:
 #   kubectl apply -f deploy/k8s/base/cluster-issuer.yaml
+
+# Traefik: global HTTP→HTTPS redirect
+kubectl apply -f https://raw.githubusercontent.com/aLynx-agency/project_f/main/deploy/k8s/base/traefik-config.yaml
+# ...or apply from the local clone:
+#   kubectl apply -f deploy/k8s/base/traefik-config.yaml
 ```
 
 ### 4. Postgres bootstrap (per environment)
@@ -211,7 +216,6 @@ Both should return HTTP 200 with a valid Let's Encrypt cert (green padlock in br
 
 ## Later hardening
 
-- HTTP→HTTPS redirect via a Traefik `Middleware` (right now HTTP requests return 404)
 - Expose ArgoCD UI at `argo.tryalynx.com` with SSO (Google or GitHub) instead of port-forward
 - CNPG backups to S3/B2 for point-in-time recovery
 - HorizontalPodAutoscaler once real traffic arrives
