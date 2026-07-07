@@ -5,3 +5,12 @@ namespace: project-f-staging
 
 resources:
   - ../../../base/postgres
+
+patches:
+  - target:
+      kind: Cluster
+      name: postgres
+    patch: |-
+      - op: replace
+        path: /spec/backup/barmanObjectStore/destinationPath
+        value: s3://project-f-backups/staging

@@ -1,0 +1,12 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: postgres-daily
+spec:
+  # CNPG uses 6-field cron (with seconds): "sec min hour dom mon dow".
+  # 03:00 UTC daily = 08:30 IST daily.
+  schedule: "0 0 3 * * *"
+  backupOwnerReference: self
+  cluster:
+    name: postgres
+  immediate: false

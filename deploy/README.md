@@ -86,6 +86,14 @@ kubectl -n project-f-production create secret generic postgres-superuser \
   --from-literal=username=postgres \
   --from-literal=password="$(openssl rand -base64 32)"
 
+# Backup credentials (see step 4b below for how to generate these in OCI)
+kubectl -n project-f-staging create secret generic postgres-backup-s3 \
+  --from-literal=ACCESS_KEY_ID='<oci-access-key-id>' \
+  --from-literal=SECRET_ACCESS_KEY='<oci-secret-key>'
+kubectl -n project-f-production create secret generic postgres-backup-s3 \
+  --from-literal=ACCESS_KEY_ID='<oci-access-key-id>' \
+  --from-literal=SECRET_ACCESS_KEY='<oci-secret-key>'
+
 # Apply the CNPG clusters
 kubectl apply -k deploy/k8s/overlays/staging/postgres
 kubectl apply -k deploy/k8s/overlays/production/postgres
@@ -93,6 +101,53 @@ kubectl apply -k deploy/k8s/overlays/production/postgres
 # Wait for both to reach Healthy state
 kubectl -n project-f-staging get clusters postgres -w      # ctrl-c when Healthy
 kubectl -n project-f-production get clusters postgres -w
+```
+
+### 4b. Postgres backups on OCI Object Storage
+
+Continuous WAL archiving + daily base backup at 03:00 UTC, 30-day retention, gzipped. Uses OCI's S3-compatibility API (Always Free tier: 20 GiB storage, 50k API calls/month).
+
+**One-time OCI Console setup:**
+
+1. **Storage → Object Storage & Archive Storage → Buckets → Create Bucket** named `project-f-backups` (Standard tier, keep Private)
+2. Click into the bucket → note the **Namespace** field (a random string like `axpravmkmffk`) and your **Region** (e.g. `us-phoenix-1`)
+3. **Identity & Security → Users → your user → Customer Secret Keys → Generate Secret Key** named `project-f-cnpg`. **Copy the secret immediately — shown only once.** Also copy the Access Key ID from the resulting table row.
+
+**Endpoint URL is hardcoded** in `deploy/k8s/base/postgres/cluster.yaml` as `https://<namespace>.compat.objectstorage.<region>.oraclecloud.com`. If you rotate to a different OCI region or account, update that string.
+
+**Verify backups after cluster is Healthy:**
+
+```bash
+# Confirm CNPG picked up the config
+kubectl -n project-f-staging get cluster postgres \
+  -o jsonpath='{.status.conditions[?(@.type=="ContinuousArchiving")]}{"\n"}'
+# → expect Status:"True"
+
+# Trigger a manual base backup to test connectivity end-to-end
+kubectl -n project-f-staging create -f - <<EOF
+apiVersion: postgresql.cnpg.io/v1
+kind: Backup
+metadata:
+  name: manual-verify-$(date +%s)
+spec:
+  cluster:
+    name: postgres
+EOF
+
+kubectl -n project-f-staging get backups -w   # ctrl-c when "completed"
+```
+
+Open the OCI bucket in the console — you'll see `staging/` and (after prod is bootstrapped) `production/` prefixes, each with `base/` and `wals/` subdirs.
+
+**Rotating OCI credentials:**
+
+```bash
+# Generate a new Customer Secret Key in OCI Console (deletes the old one).
+kubectl -n project-f-staging create secret generic postgres-backup-s3 \
+  --from-literal=ACCESS_KEY_ID='<new-id>' \
+  --from-literal=SECRET_ACCESS_KEY='<new-secret>' \
+  --dry-run=client -o yaml | kubectl apply -f -
+# repeat for project-f-production
 ```
 
 ### 5. App runtime secrets (per environment)
