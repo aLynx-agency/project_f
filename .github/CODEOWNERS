@@ -1,0 +1,20 @@
+# Fallback — anything not matched below still requires @blkksheepp review.
+*                           @blkksheepp
+
+# Infra / deploy
+/.github/                   @blkksheepp
+/deploy/                    @blkksheepp
+/Dockerfile                 @blkksheepp
+/.dockerignore              @blkksheepp
+
+# Database
+/src/db/                    @blkksheepp
+/drizzle.config.ts          @blkksheepp
+
+# Auth (files not yet present — added ahead so future PRs are gated from day one)
+/src/lib/auth.ts            @blkksheepp
+/src/lib/auth-client.ts     @blkksheepp
+/src/app/api/auth/          @blkksheepp
+
+# Env & secrets
+/src/env.ts                 @blkksheepp
