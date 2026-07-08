@@ -6,8 +6,5 @@ coverage
 drizzle
 bun.lock
 
-# Reference docs (pasted verbatim, do not reformat)
-setup.md
-
 # Drizzle-generated migration metadata
 src/db/migrations/meta

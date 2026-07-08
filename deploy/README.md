@@ -15,6 +15,19 @@ grep -RIl "alynx-agency/project_f" | xargs sed -i 's#alynx-agency/project_f#your
 
 ---
 
+## Prerequisites
+
+Before starting the runbook, make sure you have:
+
+- [ ] A domain you can add DNS records to (this repo uses `tryalynx.com`)
+- [ ] A k3s cluster (single-node is fine) with `kubectl` access from your laptop
+- [ ] Admin access to the k3s host (to open firewall ports)
+- [ ] A GitHub account with write access to the fork/mirror of this repo (CI commits image-tag bumps)
+- [ ] An OCI (Oracle Cloud) account for Postgres backups — Always Free tier is enough
+- [ ] `yq` installed locally if you need to hand-edit Kustomize overlays
+
+---
+
 ## One-time setup
 
 ### 1. DNS at Squarespace
@@ -185,12 +198,13 @@ kubectl -n project-f-staging patch secret project-f-secrets \
 
 ### 6. GHCR image visibility
 
-The first CI run creates the GHCR package as **private** by default. Either:
+The first CI run creates the GHCR package as **private** by default. The k8s manifests do not include an `imagePullSecrets` block, so as-is pods can only pull a **public** image. Pick one:
 
-- Make the package public: GitHub → your org packages → `project-f` → Package settings → Change visibility → Public. Then delete the `imagePullSecrets` block from `deploy/k8s/base/app/deployment.yaml`.
-- **Or** keep it private and create a pull secret in each namespace:
+- **A) Make the image public** (simplest — repo can still be private): GitHub → your org packages → `project-f` → Package settings → Change visibility → Public. No k8s changes needed.
+- **B) Keep the image private:** create a pull secret in each namespace **and** add an `imagePullSecrets` block to `deploy/k8s/base/app/deployment.yaml`'s pod spec (`imagePullSecrets: [{ name: ghcr-pull }]`).
 
 ```bash
+# For option B only:
 kubectl -n project-f-staging create secret docker-registry ghcr-pull \
   --docker-server=ghcr.io \
   --docker-username=<your-gh-username> \
