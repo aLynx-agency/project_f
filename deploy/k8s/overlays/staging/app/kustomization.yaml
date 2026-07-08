@@ -7,7 +7,7 @@ resources:
 images:
   - name: ghcr.io/alynx-agency/project_f
     newName: ghcr.io/alynx-agency/project_f
-    newTag: staging-f733094
+    newTag: staging-70a2c48
 patches:
   - target:
       kind: Deployment
