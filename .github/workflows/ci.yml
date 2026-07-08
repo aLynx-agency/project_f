@@ -76,11 +76,14 @@ jobs:
     timeout-minutes: 20
 
     steps:
+      # SSH deploy key checkout: the deploy key is on the ruleset bypass list,
+      # so the overlay-bump push at the end of this job can land on protected `main`.
+      # GITHUB_TOKEN cannot bypass rulesets.
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
 
       - name: Compute short SHA
         id: sha
@@ -161,11 +164,13 @@ jobs:
     timeout-minutes: 20
 
     steps:
+      # SSH deploy key: same reason as staging — bypasses the ruleset for the
+      # production overlay-bump push on main after the image build.
       - name: Checkout tag
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v4
