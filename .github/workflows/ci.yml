@@ -12,12 +12,20 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # PRs are the only quality gate. Merge-to-main assumes the PR already passed,
-  # backed by the "Require branches to be up to date before merging" ruleset —
-  # you cannot merge a PR based on a stale main.
+  # Quality gate. Runs on:
+  # - Every PR (blocks merge if red).
+  # - Every push to main that isn't a bot [skip ci] overlay bump. Covers the
+  #   rare emergency direct-to-main push (via ruleset bypass) so bad code is
+  #   caught within ~1 min instead of shipping to staging.
+  # PR merges re-run this. Cost is ~90s; guarantee is that main is always
+  # verified after any push regardless of how the commit got there.
   quality:
     name: Lint + Format + Typecheck + Tests + Build
-    if: github.event_name == 'pull_request'
+    if: |
+      github.event_name == 'pull_request'
+      || (github.event_name == 'push'
+          && github.ref == 'refs/heads/main'
+          && !contains(github.event.head_commit.message, '[skip ci]'))
     concurrency:
       group: quality-${{ github.ref }}
       cancel-in-progress: true
@@ -59,14 +67,14 @@ jobs:
         run: bun run build
 
   # Push to main → build STAGING image and bump overlay tag.
-  # No quality gate here: it already ran on the PR, and "up-to-date branches"
-  # is enforced at merge, so the merge commit is a superset of tested code.
+  # Gated on quality so a bad direct push never produces a deployed image.
   build-staging:
     name: Build & push staging image
     if: |
       github.event_name == 'push'
       && github.ref == 'refs/heads/main'
       && !contains(github.event.head_commit.message, '[skip ci]')
+    needs: quality
     concurrency:
       group: docker-${{ github.ref }}
       cancel-in-progress: false
