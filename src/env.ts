@@ -33,7 +33,7 @@ export const env = createEnv({
      * On the cluster, the value comes from k8s Secret `project-f-secrets.DATABASE_URL`,
      * which is built from the CNPG-generated `postgres-app` credentials — see deploy/README §5.
      */
-    DATABASE_URL: z.string().url(),
+    DATABASE_URL: z.url(),
 
     /**
      * Sentry organization slug, used at `next build` time by `withSentryConfig` to upload source
@@ -59,14 +59,14 @@ export const env = createEnv({
      * Absolute base URL of the running app — used to build callback URLs (auth, Stripe webhooks),
      * canonical links, and og:url tags. Must be HTTPS in prod. Baked at build time.
      */
-    NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
+    NEXT_PUBLIC_APP_URL: z.url().default("http://localhost:3000"),
 
     /**
      * Sentry DSN for the browser SDK. Baked into the client bundle at build time; setting this
      * in a k8s secret has no effect. Rebuild the image to change it. Optional in dev — leaving
      * it empty simply disables Sentry.
      */
-    NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
+    NEXT_PUBLIC_SENTRY_DSN: z.url().optional(),
   },
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
