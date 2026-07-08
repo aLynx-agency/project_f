@@ -67,13 +67,12 @@ PR titles must follow the same format — enforced by `.github/workflows/pr-titl
 
 ## Hooks
 
-| Hook         | Runs                                                           | Why                                       |
-| ------------ | -------------------------------------------------------------- | ----------------------------------------- |
-| `pre-commit` | `lint-staged` (eslint --fix, prettier --write on staged files) | Fast quality on what you touched          |
-| `commit-msg` | `commitlint` on the message                                    | Enforce Conventional Commits              |
-| `pre-push`   | `tsc --noEmit` (whole project)                                 | Type errors caught before push, not in CI |
+| Hook         | Runs                                                           | Why                          |
+| ------------ | -------------------------------------------------------------- | ---------------------------- |
+| `pre-commit` | `lint-staged` (eslint --fix, prettier --write on staged files) | Auto-fix on what you touched |
+| `commit-msg` | `commitlint` on the message                                    | Enforce Conventional Commits |
 
-Bypass with `--no-verify` only when truly necessary. CI re-runs everything and is unbypassable.
+Hooks are for **convenience** (auto-fix, early message validation). CI is the **authoritative gate** — typecheck, tests, and build all run there, on every PR and every push to main. Bypass hooks with `--no-verify` only when truly necessary; you can't bypass CI.
 
 ## Pull requests
 
