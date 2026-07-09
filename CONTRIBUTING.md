@@ -4,14 +4,19 @@ Everything you need to start coding. Detailed dives are linked out.
 
 ## Setup
 
-Requirements: Bun 1.3+, Node 22, Git.
+Requirements: Bun 1.3+, Node 22, Git, Docker.
 
 ```bash
 bun install              # installs deps + sets up Husky hooks
 cp .env.example .env.local
-# fill in DATABASE_URL and (optionally) NEXT_PUBLIC_SENTRY_DSN
+docker compose up -d     # start local Postgres (matches prod version)
+bun run db:migrate       # apply schema to local DB
 bun run dev
 ```
+
+The `DATABASE_URL` in `.env.example` points at the Compose container and works out of the box — no edits needed unless you have a port conflict on 5432.
+
+To reset the DB: `docker compose down -v` (wipes the named volume and all data).
 
 Env vars: **`src/env.ts` is the source of truth** — each var is documented there (scope, defaults, when it's needed, where it comes from). `.env.example` is a template that mirrors it.
 
