@@ -150,6 +150,10 @@ cert-manager + Let's Encrypt HTTP-01 challenge. Traefik terminates TLS in front 
 - `server.insecure: "true"` in the ArgoCD ConfigMap is required because Traefik terminates TLS in front — without it, `argocd-server` would try its own HTTP→HTTPS redirect and loop.
 - Applications: `project-f-staging` (auto-sync), `project-f-production` (manual), and two matching `-postgres` apps.
 
+### Auth
+
+Better Auth — Google OAuth + magic link, no passwords. See [auth.md](auth.md) for the full strategy, the client/server module split, and the no-barrel rule that prevents `fs` bundling into the client.
+
 ### Sentry
 
 - Client + server SDK wired via `instrumentation.ts` and `instrumentation-client.ts`.

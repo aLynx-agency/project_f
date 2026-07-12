@@ -5,3 +5,5 @@ export const appHealthChecks = pgTable("app_health_checks", {
   message: text("message").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+export * from "./auth";
