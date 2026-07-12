@@ -53,6 +53,37 @@ export const env = createEnv({
      * See docs/secrets.md for rotation.
      */
     SENTRY_AUTH_TOKEN: z.string().optional(),
+
+    /**
+     * Secret used by Better Auth to sign sessions and tokens. Generate with `openssl rand -base64 32`.
+     * Lives in `.env.local` locally and k8s Secret `project-f-secrets` in prod.
+     */
+    BETTER_AUTH_SECRET: z.string().min(1),
+
+    /**
+     * Absolute base URL passed to Better Auth for building callback URLs (OAuth redirects, magic
+     * links). Must match `NEXT_PUBLIC_APP_URL` in most deployments.
+     */
+    BETTER_AUTH_URL: z.url(),
+
+    /**
+     * Google OAuth client ID — from Google Cloud Console → Credentials.
+     * Set as a GitHub Actions Secret for CI; in prod lives in k8s Secret `project-f-secrets`.
+     */
+    GOOGLE_CLIENT_ID: z.string().min(1),
+
+    /**
+     * Google OAuth client secret — same source as `GOOGLE_CLIENT_ID`. Never expose to the client.
+     */
+    GOOGLE_CLIENT_SECRET: z.string().min(1),
+
+    /**
+     * Resend API key used at runtime to send transactional email (magic links). Required — the
+     * app will refuse to start without it. On the cluster the value comes from k8s Secret
+     * `project-f-secrets.RESEND_API_KEY`. For local dev, use a personal Resend API key.
+     * See docs/secrets.md for rotation.
+     */
+    RESEND_API_KEY: z.string().min(1),
   },
   client: {
     /**
@@ -76,6 +107,11 @@ export const env = createEnv({
     SENTRY_AUTH_TOKEN: process.env.SENTRY_AUTH_TOKEN,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
+    BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
   },
   /**
    * Skip validation during `docker build` so the image can compile without real secrets;

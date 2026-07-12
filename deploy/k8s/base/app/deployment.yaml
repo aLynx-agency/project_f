@@ -46,6 +46,26 @@ spec:
                 secretKeyRef:
                   name: project-f-secrets
                   key: DATABASE_URL
+            - name: BETTER_AUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: project-f-secrets
+                  key: BETTER_AUTH_SECRET
+            - name: BETTER_AUTH_URL
+              valueFrom:
+                secretKeyRef:
+                  name: project-f-secrets
+                  key: BETTER_AUTH_URL
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: project-f-secrets
+                  key: GOOGLE_CLIENT_ID
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: project-f-secrets
+                  key: GOOGLE_CLIENT_SECRET
             - name: SENTRY_ORG
               valueFrom:
                 secretKeyRef:
@@ -63,6 +83,12 @@ spec:
                 secretKeyRef:
                   name: project-f-secrets
                   key: SENTRY_AUTH_TOKEN
+                  optional: true
+            - name: RESEND_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: project-f-secrets
+                  key: RESEND_API_KEY
                   optional: true
           resources:
             requests:

@@ -4,18 +4,23 @@ Where each secret lives, when to rotate it, and how.
 
 ## Inventory
 
-| Secret                         | Where it lives                           | Used for                                                       |
-| ------------------------------ | ---------------------------------------- | -------------------------------------------------------------- |
-| `postgres-superuser`           | k8s Secret in each app namespace         | CNPG superuser bootstrap. Never leaves the cluster.            |
-| `postgres-app` (auto)          | k8s Secret, auto-created by CNPG         | App-user credentials for the DB. Consumed via `DATABASE_URL`.  |
-| `postgres-backup-s3`           | k8s Secret in each app namespace         | OCI Object Storage credentials for CNPG barman backups.        |
-| `project-f-secrets`            | k8s Secret in each app namespace         | Runtime env for the app pod (`DATABASE_URL`, optional Sentry). |
-| `SENTRY_AUTH_TOKEN`            | GitHub Actions Secret                    | Build-time source-map upload to Sentry.                        |
-| `NEXT_PUBLIC_SENTRY_DSN`       | GitHub Actions **Variable**              | Baked into client bundle at `docker build`.                    |
-| `SENTRY_ORG`, `SENTRY_PROJECT` | GitHub Actions Variables                 | Sentry release labeling.                                       |
-| `NEXT_PUBLIC_APP_URL`          | GitHub Actions Variable                  | Baked into client bundle at `docker build`.                    |
-| `ghcr-pull` (optional)         | k8s Secret in each app namespace         | Only if the GHCR image is kept private (see deploy/README §6). |
-| ArgoCD admin password          | k8s Secret `argocd-initial-admin-secret` | Login to `cd.tryalynx.com` UI.                                 |
+| Secret                         | Where it lives                           | Used for                                                          |
+| ------------------------------ | ---------------------------------------- | ----------------------------------------------------------------- |
+| `postgres-superuser`           | k8s Secret in each app namespace         | CNPG superuser bootstrap. Never leaves the cluster.               |
+| `postgres-app` (auto)          | k8s Secret, auto-created by CNPG         | App-user credentials for the DB. Consumed via `DATABASE_URL`.     |
+| `postgres-backup-s3`           | k8s Secret in each app namespace         | OCI Object Storage credentials for CNPG barman backups.           |
+| `project-f-secrets`            | k8s Secret in each app namespace         | Runtime env for the app pod — see the keys it must contain below. |
+| `BETTER_AUTH_SECRET`           | k8s Secret `project-f-secrets`           | Runtime — signs Better Auth sessions. `openssl rand -base64 32`.  |
+| `BETTER_AUTH_URL`              | k8s Secret `project-f-secrets`           | Runtime — Better Auth callback base URL (per-env: staging/prod).  |
+| `GOOGLE_CLIENT_ID`             | k8s Secret `project-f-secrets`           | Runtime — Google OAuth. From Google Cloud Console → Credentials.  |
+| `GOOGLE_CLIENT_SECRET`         | k8s Secret `project-f-secrets`           | Runtime — Google OAuth. Never expose to client.                   |
+| `SENTRY_AUTH_TOKEN`            | GitHub Actions Secret                    | Build-time source-map upload to Sentry.                           |
+| `NEXT_PUBLIC_SENTRY_DSN`       | GitHub Actions **Variable**              | Baked into client bundle at `docker build`.                       |
+| `SENTRY_ORG`, `SENTRY_PROJECT` | GitHub Actions Variables                 | Sentry release labeling.                                          |
+| `NEXT_PUBLIC_APP_URL`          | GitHub Actions Variable                  | Baked into client bundle at `docker build`.                       |
+| `ghcr-pull` (optional)         | k8s Secret in each app namespace         | Only if the GHCR image is kept private (see deploy/README §6).    |
+| `RESEND_API_KEY`               | k8s Secret `project-f-secrets`           | Runtime — Resend API for transactional email (magic links).       |
+| ArgoCD admin password          | k8s Secret `argocd-initial-admin-secret` | Login to `cd.tryalynx.com` UI.                                    |
 
 ## When to rotate
 
@@ -64,6 +69,24 @@ kubectl -n project-f-staging get cluster postgres \
 
 # 3. Trigger a rebuild by pushing an empty commit or re-running the last CI job.
 #    Confirm source maps upload on the next build.
+```
+
+### Resend API key
+
+```bash
+# 1. Resend Dashboard → API Keys → revoke the old key → create a new one.
+#    Scope it to "sending access" only for the tryalynx.com domain.
+
+# 2. Update the k8s Secret in each namespace:
+kubectl -n project-f-staging patch secret project-f-secrets \
+  -p="{\"stringData\":{\"RESEND_API_KEY\":\"<new-key>\"}}"
+
+kubectl -n project-f-production patch secret project-f-secrets \
+  -p="{\"stringData\":{\"RESEND_API_KEY\":\"<new-key>\"}}"
+
+# 3. Restart the app deployment so pods pick up the new value:
+kubectl -n project-f-staging rollout restart deployment/app
+kubectl -n project-f-production rollout restart deployment/app
 ```
 
 ### ArgoCD admin password

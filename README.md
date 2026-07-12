@@ -16,6 +16,7 @@ bun run fix       # eslint --fix && prettier --write
 
 - [CONTRIBUTING.md](CONTRIBUTING.md) — start here to code on this repo
 - [docs/architecture.md](docs/architecture.md) — system overview: how the pieces talk
+- [docs/auth.md](docs/auth.md) — auth strategy, module layout, no-barrel rule
 - [docs/database.md](docs/database.md) — Drizzle workflow, migrations, conventions
 - [docs/observability.md](docs/observability.md) — Sentry setup + gotchas
 - [docs/secrets.md](docs/secrets.md) — secret inventory + rotation runbook
