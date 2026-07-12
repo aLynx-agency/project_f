@@ -2,4 +2,11 @@ import { Resend } from "resend";
 
 import { env } from "@/env";
 
-export const resend = new Resend(env.RESEND_API_KEY);
+let _resend: Resend | undefined;
+
+export const resend = {
+  get emails() {
+    _resend ??= new Resend(env.RESEND_API_KEY);
+    return _resend.emails;
+  },
+};
